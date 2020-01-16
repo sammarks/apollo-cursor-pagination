@@ -71,7 +71,12 @@ const nodesToReturn = async (allNodesAccessor, {
   isAggregateFn,
   formatColumnFn
 }) => {
-  const orderedNodesAccessor = orderNodesBy(allNodesAccessor, orderColumn, ascOrDesc);
+  const orderedNodesAccessor = orderNodesBy(allNodesAccessor, {
+    orderColumn,
+    ascOrDesc,
+    isAggregateFn,
+    formatColumnFn
+  });
   const nodesAccessor = applyCursorsToNodes(orderedNodesAccessor, {
     before,
     after
@@ -156,8 +161,13 @@ const apolloCursorPaginationBuilder = ({
   if (orderColumn) {
     console.warn('"orderColumn" and "ascOrDesc" are being deprecated in favor of "orderBy" and "orderDirection" respectively');
   } else {
-    orderColumn = formatColumnFn ? formatColumnFn(orderBy) : orderBy;
+    orderColumn = orderBy;
     ascOrDesc = orderDirection;
+  }
+
+  if (formatColumnFn && formatColumnFn(orderColumn) !== orderColumn) {
+    console.warn(`orderBy ${orderColumn} should not equal its formatted counterpart: ${formatColumnFn(orderColumn)}.`);
+    console.warn('This may cause issues with cursors being generated properly.');
   }
 
   const {
